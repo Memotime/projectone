@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 博客 -->
+<mapper namespace="com.david.emdblog.dao.BlogDao">
+	<resultMap type="Blog" id="BlogResult">
+		<result property="id" column="id" />
+		<result property="title" column="title" />
+		<result property="releaseDate" column="releaseDate" />
+		<result property="clickHit" column="clickHit" />
+		<result property="replyHit" column="replyHit" />
+		<result property="content" column="content" />
+		<result property="contentNoTag" column="contentNoTag" />
+		<result property="summary" column="summary" />
+		<result property="releaseDateStr" column="releaseDateStr" />
+		<result property="keyWord" column="keyWord" />
+		<result property="blogFormat" column="blogFormat" />
+		<association property="blogType" column="typeId"
+			select="com.david.emdblog.dao.BlogTypeDao.findById"></association>
+	</resultMap>
+
+	<!-- 根据标题，类型，日期分页查询。排序得到文章列表 -->
+	<select id="list" parameterType="Map" resultMap="BlogResult">
+		select * from t_blog
+		<where>
+			<if test="title!=null and title!=''">
+				and title like #{title}
+			</if>
+			<if test="typeId!=null and typeId!=''">
+				and typeId = #{typeId}
+			</if>
+			<if test="releaseDateStr!=null and releaseDateStr!=''">
+				and DATE_FORMAT(releaseDate,'%Y年%m月')=#{releaseDateStr}
+			</if>
+			<if test="blogFormat!=null and blogFormat!=''">
+					and blogFormat = #{blogFormat}
+			</if>
+		</where>
+		<!-- 排序以及分页放在where之后 -->
+		order by releaseDate desc
+		<if test="start!=null and size!=null">
+			limit #{start},#{size}
+		</if>
+	</select>
+	<!-- 获得文章的总数量 -->
+	<select id="getTotal" parameterType="Map" resultType="Long">
+		select count(*) from t_blog
+		<where>
+			<if test="title!=null and title!=''">
+				and title like #{title}
+			</if>
+			<if test="typeId!=null and typeId!=''">
+				and typeId = #{typeId}
+			</if>
+			<if test="releaseDateStr!=null and releaseDateStr!=''">
+				and DATE_FORMAT(releaseDate,'%Y年%m月')=#{releaseDateStr}
+			</if>
+		</where>
+	</select>
+
+	<!-- 根据日期分组查询文章,所有文章以及对应的数量 -->
+	<select id="countList" resultMap="BlogResult">
+		SELECT
+		DATE_FORMAT(releaseDate,'%Y年%m月') AS releaseDateStr ,COUNT(*) AS
+		blogCount FROM t_blog GROUP BY DATE_FORMAT(releaseDate,'%Y年%m月') ORDER
+		BY DATE_FORMAT(releaseDate,'%Y年%m月') DESC;
+	</select>
+
+	<!-- 新增文章.now()当前时间。 -->
+	<insert id="add" useGeneratedKeys="true" keyProperty="id"
+		parameterType="Blog">
+		insert into t_blog
+		values(null,#{title},#{summary},now(),0,0,#{content},#{blogType.id},#{keyWord},#{contentNoTag},#{blogFormat})
+	</insert>
+	<!--  更新文章 -->
+	<update id="update" parameterType="Blog">
+		update t_blog
+		<set>
+			<if test="title!=null and title!=''">
+				title=#{title},
+			</if>
+			<if test="summary!=null and summary!=''">
+				summary=#{summary},
+			</if>
+			<if test="content!=null and content!=''">
+				content=#{content},
+			</if>
+			<if test="blogType.id!=null">
+				typeId=#{blogType.id},
+			</if>
+			<if test="clickHit!=null ">
+				clickHit=#{clickHit},
+			</if>
+			<if test="replyHit!=null">
+				replyHit=#{replyHit},
+			</if>
+			<if test="keyWord!=null and keyWord!=''">
+				keyWord=#{keyWord},
+			</if>
+			<if test="contentNoTag!=null and contentNoTag!=''">
+				contentNoTag=#{contentNoTag},
+			</if>
+			<if test="blogFormat!=null and blogFormat!=''">
+				blogFormat=#{blogFormat},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	<!-- 根据id查询文章 -->
+	<select id="findById" parameterType="Integer" resultMap="BlogResult">
+		select *
+		from t_blog where id=#{id}
+	</select>
+	<!-- 根据文章类型id,查找此目录下的文章 -->
+	<select id="getBlogByTypeId" parameterType="Integer" resultType="Integer">
+		select count(*) from t_blog where typeId=#{typeId}
+	</select>
+	<!-- 根据id删除文章 -->
+	<delete id="deleteById" parameterType="Integer">
+		delete from t_blog where id=#{id}
+	</delete>
+	<!-- 获取下一篇文章 -->
+	<select id="getNextBlog" parameterType="Integer" resultMap="BlogResult">
+		select * from t_blog where id&gt;#{id} order by id asc limit 1 
+	</select>
+	<!-- 获取上一篇文章 -->
+	<select id="getLastBlog" parameterType="Integer" resultMap="BlogResult">
+		select * from t_blog where id&lt;#{id} order by id desc limit 1
+	</select>
+	
+	
+</mapper>
