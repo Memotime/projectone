@@ -11,7 +11,7 @@
 	<!-- <url>http://maven.apache.org</url> -->
 	<!-- 将一些版本号进行设置抽取 -->
 	<properties>
-		<spring.version>4.1.7.RELEASE</spring.version>
+		<spring.version>5.3.18</spring.version>
 		<slf4j.version>1.6.6</slf4j.version>
 		<log4j.version>1.2.12</log4j.version>
 		<shiro.version>1.2.3</shiro.version>
